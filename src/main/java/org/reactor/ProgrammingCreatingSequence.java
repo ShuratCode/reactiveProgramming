@@ -9,6 +9,8 @@ public class ProgrammingCreatingSequence {
         useGenerate();
         System.out.println();
         useGenerateWithMutable();
+        System.out.println();
+        useGenerateWithConsumer();
     }
 
     private static void useGenerate() {
@@ -31,5 +33,14 @@ public class ProgrammingCreatingSequence {
             }
             return state;
         }).doOnNext(System.out::println).blockLast();
+    }
+
+    private static void useGenerateWithConsumer() {
+        Flux.generate(AtomicLong::new, (state, sink) -> {
+            long i = state.getAndIncrement();
+            sink.next("3 x " + i + " = " + 3 * i);
+            if (i == 10) {sink.complete();}
+            return state;
+        }, state -> System.out.println("state: " + state)).blockLast();
     }
 }
