@@ -2,6 +2,7 @@ package org.reactor;
 
 import reactor.core.publisher.Flux;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ProgrammingCreatingSequence {
@@ -11,6 +12,8 @@ public class ProgrammingCreatingSequence {
         useGenerateWithMutable();
         System.out.println();
         useGenerateWithConsumer();
+        System.out.println();
+        useCreate();
     }
 
     private static void useGenerate() {
@@ -42,5 +45,22 @@ public class ProgrammingCreatingSequence {
             if (i == 10) {sink.complete();}
             return state;
         }, state -> System.out.println("state: " + state)).blockLast();
+    }
+
+    private static void useCreate() {
+        EventProcessor<String> myEventProcessor = new EventProcessor<>();
+        Flux<String> bridge = Flux.create(sink -> {
+            myEventProcessor.register(new MyEventListener<>() {
+                @Override
+                public void onDataChunk(List<String> chunk) {
+                    chunk.forEach(sink::next);
+                }
+
+                public void processComplete() {
+                    sink.complete();
+                }
+            });
+        });
+
     }
 }
