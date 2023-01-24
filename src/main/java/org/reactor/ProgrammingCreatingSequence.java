@@ -22,6 +22,8 @@ public class ProgrammingCreatingSequence {
         usePush();
         System.out.println();
         createWithOnRequest();
+        System.out.println();
+        cleanUp();
     }
 
     private static void useGenerate() {
@@ -69,6 +71,7 @@ public class ProgrammingCreatingSequence {
         }));
     }
 
+
     private static void usePush() {
         EventProcessor<String> myEventProcessor = new EventProcessor<>();
         Flux.push(sink -> myEventProcessor.register(new SingleThreadEventListener<String>() {
@@ -102,6 +105,14 @@ public class ProgrammingCreatingSequence {
                 List<String> messages = messageProcessor.getHistory(n);
                 messages.forEach(sink::next);
             });
+        });
+    }
+
+    private static void cleanUp() {
+        Flux.create(sink -> {
+            sink.onRequest(n -> System.out.printf("Requested %d elements%n", n))
+                .onCancel(() -> System.out.println("Got cancel signal"))
+                .onDispose(() -> System.out.println("Got dispose signal"));
         });
     }
 }
