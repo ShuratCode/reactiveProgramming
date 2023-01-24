@@ -1,5 +1,9 @@
 package org.reactor;
 
+import org.reactor.create.MyEventListener;
+import org.reactor.onRequest.MessageProcessor;
+import org.reactor.onRequest.MyMessageListener;
+import org.reactor.push.SingleThreadEventListener;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -16,6 +20,8 @@ public class ProgrammingCreatingSequence {
         useCreate();
         System.out.println();
         usePush();
+        System.out.println();
+        createWithOnRequest();
     }
 
     private static void useGenerate() {
@@ -81,5 +87,21 @@ public class ProgrammingCreatingSequence {
                 sink.complete();
             }
         }));
+    }
+
+    private static void createWithOnRequest() {
+        MessageProcessor<String> messageProcessor = new MessageProcessor<>();
+        Flux.create(sink -> {
+            messageProcessor.register(new MyMessageListener<String>() {
+                @Override
+                public void onMessage(List<String> messages) {
+                    messages.forEach(sink::next);
+                }
+            });
+            sink.onRequest(n -> {
+                List<String> messages = messageProcessor.getHistory(n);
+                messages.forEach(sink::next);
+            });
+        });
     }
 }
