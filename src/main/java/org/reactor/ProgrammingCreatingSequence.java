@@ -14,6 +14,8 @@ public class ProgrammingCreatingSequence {
         useGenerateWithConsumer();
         System.out.println();
         useCreate();
+        System.out.println();
+        usePush();
     }
 
     private static void useGenerate() {
@@ -49,18 +51,35 @@ public class ProgrammingCreatingSequence {
 
     private static void useCreate() {
         EventProcessor<String> myEventProcessor = new EventProcessor<>();
-        Flux<String> bridge = Flux.create(sink -> {
-            myEventProcessor.register(new MyEventListener<>() {
-                @Override
-                public void onDataChunk(List<String> chunk) {
-                    chunk.forEach(sink::next);
-                }
+        Flux<String> bridge = Flux.create(sink -> myEventProcessor.register(new MyEventListener<>() {
+            @Override
+            public void onDataChunk(List<String> chunk) {
+                chunk.forEach(sink::next);
+            }
 
-                public void processComplete() {
-                    sink.complete();
-                }
-            });
-        });
+            public void processComplete() {
+                sink.complete();
+            }
+        }));
+    }
 
+    private static void usePush() {
+        EventProcessor<String> myEventProcessor = new EventProcessor<>();
+        Flux.push(sink -> myEventProcessor.register(new SingleThreadEventListener<String>() {
+            @Override
+            public void processError(Throwable throwable) {
+                sink.error(throwable);
+            }
+
+            @Override
+            public void onDataChunk(List<String> chunk) {
+                chunk.forEach(sink::next);
+            }
+
+            @Override
+            public void processComplete() {
+                sink.complete();
+            }
+        }));
     }
 }
